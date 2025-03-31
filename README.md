@@ -1,0 +1,2 @@
+# ECEseek
+DeepSeek for Coolify
