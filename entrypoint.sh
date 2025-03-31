@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Start the Ollama server in the background
-ollama serve --timeout 600 &
+ollama serve &
 
 # Wait for the server to start
 sleep 5
