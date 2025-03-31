@@ -3,37 +3,79 @@ version: '3.8'
 networks:
   ai_network:
     driver: bridge
-    
+
 services:
   ollama:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ollama/ollama:latest
     container_name: ollama
     volumes:
-      - ollama:/root/.ollama
+      - ollama_data:/root/.ollama
     ports:
       - "11434:11434"
     networks:
       - ai_network
-    environment:
-      - MODEL_NAME=deepseek-r1:70b  # Define the model here
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    command: >
+      sh -c "ollama serve &
+             sleep 10 &&
+             ollama pull deepseek-r1:1.5b &&
+             tail -f /dev/null"
+    labels:
+      coolify.managed: "true"
+      coolify.resource.id: "${COOLIFY_RESOURCE_ID:-ollama}"
 
   open-webui:
     image: ghcr.io/open-webui/open-webui:main
     container_name: open-webui
     depends_on:
-      - ollama
+      ollama:
+        condition: service_healthy
     ports:
       - "3000:8080"
     volumes:
-      - open-webui:/app/backend/data
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    restart: always
+      - webui_data:/app/backend/data
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - OLLAMA_API_BASE_URL=/ollama/api
+      - DOMAIN=ai.eceoffshore.com
+      - PROTOCOL=https
+    restart: unless-stopped
     networks:
       - ai_network
+    labels:
+      coolify.managed: "true"
+      coolify.resource.id: "${COOLIFY_RESOURCE_ID:-open-webui}"
+      # Traefik labels for routing with specific domain
+      traefik.enable: "true"
+      traefik.http.routers.open-webui.rule: "Host(`ai.eceoffshore.com`)"
+      traefik.http.routers.open-webui.entrypoints: "web,websecure"
+      traefik.http.routers.open-webui.tls: "true"
+      traefik.http.routers.open-webui.tls.certresolver: "coolify"
+      traefik.http.services.open-webui.loadbalancer.server.port: "8080"
+      # Redirect HTTP to HTTPS
+      traefik.http.routers.open-webui-http.rule: "Host(`ai.eceoffshore.com`)"
+      traefik.http.routers.open-webui-http.entrypoints: "web"
+      traefik.http.routers.open-webui-http.middlewares: "open-webui-https-redirect"
+      traefik.http.middlewares.open-webui-https-redirect.redirectscheme.scheme: "https"
+      traefik.http.middlewares.open-webui-https-redirect.redirectscheme.permanent: "true"
+      # CORS configuration
+      traefik.http.middlewares.open-webui-cors.headers.accesscontrolallowmethods: "GET,OPTIONS,PUT,POST,DELETE"
+      traefik.http.middlewares.open-webui-cors.headers.accesscontrolalloworiginlist: "*"
+      traefik.http.middlewares.open-webui-cors.headers.accesscontrolallowheaders: "Origin,X-Requested-With,Content-Type,Accept,Authorization"
+      traefik.http.middlewares.open-webui-cors.headers.accesscontrolmaxage: "100"
+      traefik.http.middlewares.open-webui-cors.headers.addvaryheader: "true"
+      traefik.http.routers.open-webui.middlewares: "open-webui-cors"
 
 volumes:
-  ollama:
-  open-webui:
+  ollama_data:
+    name: ${COOLIFY_VOLUME_PREFIX:-coolify}_ollama_data
+    driver: local
+  webui_data:
+    name: ${COOLIFY_VOLUME_PREFIX:-coolify}_webui_data
+    driver: local
