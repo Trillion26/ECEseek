@@ -7,7 +7,7 @@ ollama serve --timeout 600 &
 sleep 5
 
 # Pull the required model (using MODEL_NAME variable)
-ollama pull "${MODEL_NAME}"
+ollama pull deepseek-r1:70b
 
 # Keep the container running
 tail -f /dev/null
