@@ -22,13 +22,10 @@ services:
       retries: 3
       start_period: 10s
     command: >
-      sh -c "ollama serve &
-             sleep 10 &&
-             ollama pull deepseek-r1:1.5b &&
-             tail -f /dev/null"
+      sh -c "ollama serve & sleep 10 && ollama pull deepseek-r1:1.5b && tail -f /dev/null"
     labels:
-      coolify.managed: "true"
-      coolify.resource.id: "${COOLIFY_RESOURCE_ID:-ollama}"
+      "coolify.managed": "true"
+      "coolify.resource.id": "${COOLIFY_RESOURCE_ID:-ollama}"
 
   open-webui:
     image: ghcr.io/open-webui/open-webui:main
@@ -49,28 +46,28 @@ services:
     networks:
       - ai_network
     labels:
-      coolify.managed: "true"
-      coolify.resource.id: "${COOLIFY_RESOURCE_ID:-open-webui}"
-      # Traefik labels for routing with specific domain
-      traefik.enable: "true"
-      traefik.http.routers.open-webui.rule: "Host(`ai.eceoffshore.com`)"
-      traefik.http.routers.open-webui.entrypoints: "web,websecure"
-      traefik.http.routers.open-webui.tls: "true"
-      traefik.http.routers.open-webui.tls.certresolver: "coolify"
-      traefik.http.services.open-webui.loadbalancer.server.port: "8080"
+      "coolify.managed": "true"
+      "coolify.resource.id": "${COOLIFY_RESOURCE_ID:-open-webui}"
+      # Traefik labels for routing
+      "traefik.enable": "true"
+      "traefik.http.routers.open-webui.rule": "Host(`ai.eceoffshore.com`)"
+      "traefik.http.routers.open-webui.entrypoints": "web,websecure"
+      "traefik.http.routers.open-webui.tls": "true"
+      "traefik.http.routers.open-webui.tls.certresolver": "coolify"
+      "traefik.http.services.open-webui.loadbalancer.server.port": 8080
       # Redirect HTTP to HTTPS
-      traefik.http.routers.open-webui-http.rule: "Host(`ai.eceoffshore.com`)"
-      traefik.http.routers.open-webui-http.entrypoints: "web"
-      traefik.http.routers.open-webui-http.middlewares: "open-webui-https-redirect"
-      traefik.http.middlewares.open-webui-https-redirect.redirectscheme.scheme: "https"
-      traefik.http.middlewares.open-webui-https-redirect.redirectscheme.permanent: "true"
+      "traefik.http.routers.open-webui-http.rule": "Host(`ai.eceoffshore.com`)"
+      "traefik.http.routers.open-webui-http.entrypoints": "web"
+      "traefik.http.routers.open-webui-http.middlewares": "open-webui-https-redirect"
+      "traefik.http.middlewares.open-webui-https-redirect.redirectscheme.scheme": "https"
+      "traefik.http.middlewares.open-webui-https-redirect.redirectscheme.permanent": "true"
       # CORS configuration
-      traefik.http.middlewares.open-webui-cors.headers.accesscontrolallowmethods: "GET,OPTIONS,PUT,POST,DELETE"
-      traefik.http.middlewares.open-webui-cors.headers.accesscontrolalloworiginlist: "*"
-      traefik.http.middlewares.open-webui-cors.headers.accesscontrolallowheaders: "Origin,X-Requested-With,Content-Type,Accept,Authorization"
-      traefik.http.middlewares.open-webui-cors.headers.accesscontrolmaxage: "100"
-      traefik.http.middlewares.open-webui-cors.headers.addvaryheader: "true"
-      traefik.http.routers.open-webui.middlewares: "open-webui-cors"
+      "traefik.http.middlewares.open-webui-cors.headers.accesscontrolallowmethods": "GET,OPTIONS,PUT,POST,DELETE"
+      "traefik.http.middlewares.open-webui-cors.headers.accesscontrolalloworiginlist": "*"
+      "traefik.http.middlewares.open-webui-cors.headers.accesscontrolallowheaders": "Origin,X-Requested-With,Content-Type,Accept,Authorization"
+      "traefik.http.middlewares.open-webui-cors.headers.accesscontrolmaxage": "100"
+      "traefik.http.middlewares.open-webui-cors.headers.addvaryheader": "true"
+      "traefik.http.routers.open-webui.middlewares": "open-webui-cors"
 
 volumes:
   ollama_data:
