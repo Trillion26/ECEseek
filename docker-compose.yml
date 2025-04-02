@@ -54,7 +54,7 @@ services:
       "traefik.http.routers.open-webui.entrypoints": "web,websecure"
       "traefik.http.routers.open-webui.tls": "true"
       "traefik.http.routers.open-webui.tls.certresolver": "coolify"
-      "traefik.http.services.open-webui.loadbalancer.server.port": 8080
+      "traefik.http.services.open-webui.loadbalancer.server.port": "8080"
       # Redirect HTTP to HTTPS
       "traefik.http.routers.open-webui-http.rule": "Host(`ai.eceoffshore.com`)"
       "traefik.http.routers.open-webui-http.entrypoints": "web"
